@@ -1,0 +1,27 @@
+{% extends "shop/base.html" %}
+{% load static %}
+{% block content %}
+  <div class="container mt-4">
+    <h2 class="mb-4">Add Category</h2>
+    <form method="post" class="col-md-6">
+      {% csrf_token %}
+      <div class="mb-3">
+        {{ form.name.label_tag }}
+        {{ form.name }}
+        {% if form.name.errors %}
+          <small class="text-danger">{{ form.name.errors.0 }}</small>
+        {% endif %}
+      </div>
+      <div class="mb-3">
+        {{ form.slug.label_tag }}
+        {{ form.slug }}
+        {% if form.slug.errors %}
+          <small class="text-danger">{{ form.slug.errors.0 }}</small>
+        {% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary">Add Category</button>
+    </form>
+  </div>
+    <script src="https://unpkg.com/slugify"></script>
+    <script src="{% static 'shop/js/autoSlugName.js' %}"> </script>
+{% endblock %}

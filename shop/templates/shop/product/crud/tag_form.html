@@ -1,0 +1,32 @@
+{% extends 'shop/base.html' %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2>Создание тега</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="{{ form.name.id_for_label }}" class="form-label">Имя тега:</label>
+        {{ form.name }}
+        <div class="invalid-feedback">
+          {{ form.name.errors }}
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="{{ form.slug.id_for_label }}" class="form-label">Slug:</label>
+        {{ form.slug }}
+        <div class="invalid-feedback">
+          {{ form.slug.errors }}
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="{{ form.filters.id_for_label }}" class="form-label">Фильтр:</label>
+        {{ form.filters }}
+        <div class="invalid-feedback">
+          {{ form.filters.errors }}
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+  </div>
+{% endblock %}

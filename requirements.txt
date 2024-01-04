@@ -1,0 +1,17 @@
+asgiref==3.5.2
+captcha==0.4
+Django~=4.0
+django-crispy-forms==1.14.0
+django-debug-toolbar==3.6.0
+django-ranged-response==0.2.0
+django-simple-captcha==0.5.17
+loguru==0.6.0
+Pillow==9.2.0
+sqlparse==0.4.2
+utils==1.0.1
+
+djangorestframework~=3.14.0
+pytz~=2023.3.post1
+setuptools~=69.0.2
+requests~=2.31.0
+logging~=0.4.9.6

@@ -1,0 +1,46 @@
+{% extends "shop/base.html" %}
+{% load static %}
+{% block title %}
+    {{title}}
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Add Product</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.title.label_tag }}
+                {{ form.title }}
+            </div>
+            <div class="form-group">
+                {{ form.slug.label_tag }}
+                {{ form.slug }}
+            </div>
+            <div class="form-group">
+                {{ form.category.label_tag }}
+                {{ form.category }}
+            </div>
+            <div class="form-group">
+                {{ form.image.label_tag }}
+                {{ form.image }}
+            </div>
+            <div class="form-group">
+                {{ form.description.label_tag }}
+                {{ form.description }}
+            </div>
+            <div class="form-group">
+                {{ form.price.label_tag }}
+                {{ form.price }}
+            </div>
+            <div class="form-group">
+                {{ form.available.label_tag }}
+                {{ form.available }}
+            </div>
+            <button type="submit" class="btn btn-primary">Add Product</button>
+        </form>
+    </div>
+
+    <script src="https://unpkg.com/slugify"></script>
+    <script src="{% static 'shop/js/autoSlugTitle.js' %}"> </script>
+{% endblock %}

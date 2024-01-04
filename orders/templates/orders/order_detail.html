@@ -1,0 +1,17 @@
+{% extends "shop/base.html" %}
+{% load static %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2>Детали заказа #{{ order.id }}</h2>
+    <p><strong>Имя:</strong> {{ order.first_name }}</p>
+    <p><strong>Фамилия:</strong> {{ order.last_name }}</p>
+    <p><strong>Email:</strong> {{ order.email }}</p>
+    <p><strong>Адрес:</strong> {{ order.address }}</p>
+    <p><strong>Почтовый индекс:</strong> {{ order.postal_code }}</p>
+    <p><strong>Город:</strong> {{ order.city }}</p>
+    <p><strong>Создан:</strong> {{ order.created }}</p>
+    <p><strong>Обновлен:</strong> {{ order.updated }}</p>
+    <p><strong>Оплачен:</strong> {% if order.paid %}Да{% else %}Нет{% endif %}</p>
+  </div>
+{% endblock %}
