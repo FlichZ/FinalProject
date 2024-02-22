@@ -22,7 +22,7 @@ class CartAddView(View):
         form = CartAddProductForm(request.POST)
         if form.is_valid():
             cd = form.cleaned_data
-            cart.add_to_cart(product_id, cd['quantity'], request.POST.get('overwrite_qty'))
+            cart.add_to_cart(product_id, 1, request.POST.get('overwrite_qty'))
             return redirect('cart:cart_detail')
 
 

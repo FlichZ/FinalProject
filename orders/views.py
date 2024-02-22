@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
@@ -10,13 +11,29 @@ from .serializers import OrderSerializer, OrderItemSerializer
 from .permissions import IsStaffOrReadOnly
 
 
+@login_required
 def order_create(request):
     cart = Cart(request)
-    if request.method == 'POST':  # если форма первый раз отображается то метод будет None, и тогда мы перейдем в else для отображения новой формы
+
+    # Получение данных о пользователе из профиля или сеанса
+    user_profile = request.user  # Предполагается, что у пользователя есть профиль
+
+    if request.method == 'POST':
         form = OrderCreateForm(request.POST)
-        # отправка данных на сервер
+
         if form.is_valid():
-            order = form.save()
+            order = form.save(commit=False)
+
+            # Заполнение данных из профиля или сеанса
+            order.user = request.user
+            order.first_name = user_profile.first_name
+            order.last_name = user_profile.last_name
+            order.email = user_profile.email
+            order.user = request.user
+            # Добавьте другие поля по необходимости
+
+            order.save()
+
             for item in cart:
                 OrderItem.objects.create(
                     order=order,
@@ -24,15 +41,27 @@ def order_create(request):
                     price=item['price'],
                     quantity=item['quantity']
                 )
+
+            item['product'].available = False
+            item['product'].save()
+
             cart.clear_cart()
-            send_mail('Заказ Оформлен',
-                      'Войдите в админ панель, что бы просмотреть новый заказ.',
+
+            send_mail('Заказ оформлен',
+                      'Войдите в админ-панель, чтобы просмотреть новый заказ.',
                       'zubastikbro915@gmail.com',
                       ['zubastikbro915@gmail.com'],
-                      fail_silently=True)  # ошибка будет игнорироваться, программа продолжит работу
-        return render(request, 'orders/created.html', {'order': order})
+                      fail_silently=True)
+
+            return render(request, 'orders/created.html', {'order': order})
     else:
-        form = OrderCreateForm()
+        form = OrderCreateForm(instance=user_profile, initial={
+            'first_name': user_profile.first_name,
+            'last_name': user_profile.last_name,
+            'email': user_profile.email,
+            # Добавьте другие поля по необходимости
+        })
+
     return render(request, 'orders/create.html', {'form': form})
 
 

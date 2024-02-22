@@ -1,0 +1,70 @@
+{% extends 'shop/base.html' %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Панель слева с переключателями страниц -->
+      <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar mt-4">
+        <div class="position-sticky">
+          <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'shop:profile' %}">
+                    <i class="fas fa-user"></i> Профиль
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'shop:property' %}">
+                    <i class="fas fa-home"></i> Мои объекты
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{% url 'shop:booking' %}">
+                    <i class="fas fa-shopping-cart"></i> Бронирование
+                </a>
+            </li>
+            <!-- Добавьте дополнительные пункты меню, если необходимо -->
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Основное содержимое страницы -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <!-- Заголовок Профиль и кнопка выхода -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <h3 class="mt-4 mx-auto">Профиль</h3>
+          <a href="{% url 'shop:logout' %}" class="btn btn-danger mt-5 mx-auto">Выход</a>
+        </div>
+
+        <!-- Карточка с данными пользователя -->
+        <div class="card mt-4 mx-auto" style="max-width: 600px;">
+          <div class="card-body">
+            <h5 class="card-title mb-4">Личные данные</h5>
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              {{ form.as_p }}
+              <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+    <style>
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 100% высоты видимой области окна браузера */
+  }
+
+  .container-fluid {
+    flex: 1; /* Растягиваем основной контейнер на всю доступную высоту */
+  }
+
+  /* Добавленные стили для футера */
+  footer {
+    margin-top: auto; /* Магическая магия для размещения футера внизу */
+  }
+</style>
+{% endblock %}

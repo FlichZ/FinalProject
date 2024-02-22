@@ -106,7 +106,7 @@
                 <a href="{% url 'shop:product_list' %}" class="btn btn-warning shadow-custom col">
                     Вернуться назад
                 </a>
-                <a href="{% url 'orders:order_create_default' %}" class="btn btn-danger shadow-custom col">
+                <a href="{% url 'orders:order_create_default' %}" id="order_create_button" class="btn btn-danger shadow-custom col">
                     Оформить заказ
                 </a>
             </div>
@@ -122,4 +122,9 @@
         {% endif %}
     </div>
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("order_create_button").click();
+  });
+</script>
 {% endblock content %}

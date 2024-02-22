@@ -1,0 +1,176 @@
+{% extends "shop/base.html" %}
+{% load static %}
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <br>
+        {% if request.path != object.get_absolute_url %}
+        <!-- Овальный переключатель -->
+        <div class="container-fluid mb-4 d-flex align-items-center justify-content-center">
+            <div class="row justify-content-center">
+                <div class="input-group input-group-lg">
+                    <div class="btn btn-secondary rounded-pill" style="opacity: 0.5; background-color: #f8f9fa; width: 296px; height: 56px; padding: 5px;">
+                        <div class="input-group-prepend d-flex align-items-center">
+                            <div class="btn-group d-flex align-items-center" data-toggle="buttons" style="margin-top: 2px">
+                                <div class="btn btn-secondary rounded-pill active text-dark" style="opacity: 0.5; background-color: #f8f9fa; width: 131px;" onclick="window.location='{% url 'shop:projects' %}'">
+                                    Проекты
+                                </div>
+                                <div class="btn btn-secondary rounded-pill text-dark" style="opacity: 1; background-color: #e9ecef; width: 157px;" onclick="window.location='{% url 'shop:search' %}'">
+                                    Квартиры
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="container-fluid mb-4 d-flex align-items-center justify-content-center">
+            <div class="row justify-content-center">
+                <h2>Квартиры в {{ object }}</h2>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Дополнительные элементы в одной строке -->
+    <div class="container-fluid mt-4 d-flex align-items-center justify-content-start">
+        <a href="{% url 'shop:search' %}?category=studio" class="btn btn-secondary rounded-pill" style="width: 120px; height: 46px; opacity: 0.7;">Студия</a>
+        <!-- Круглые кнопки "1", "2", "3+" -->
+        <div class="btn-group" style="margin-left: 20px;">
+            <a href="{% if request.path != object.get_absolute_url %}{% url 'shop:search' %}{% else %}{{ obj.get_absolute_url }}{% endif %}?category=1-room" class="btn btn-secondary rounded-circle" style="width: 46px; height: 46px;">1</a>
+            <a href="{% if request.path != object.get_absolute_url %}{% url 'shop:search' %}{% else %}{{ obj.get_absolute_url }}{% endif %}?category=2-room" class="btn btn-secondary rounded-circle" style="width: 46px; height: 46px;">2</a>
+            <a href="{% if request.path != object.get_absolute_url %}{% url 'shop:search' %}{% else %}{{ obj.get_absolute_url }}{% endif %}?category=3-room" class="btn btn-secondary rounded-circle" style="width: 46px; height: 46px;">3+</a>
+        </div>
+
+        <!-- Овальная кнопка с разделением полей "От" и "До" с ползунками -->
+        <form method="get" class="form-inline" style="width: 350px; margin-left: 20px;">
+            <input type="text" name="min_price" class="form-control mr-2" placeholder="От" style="border-radius: 0; text-align: center; width: 100px;">
+            <input type="text" name="max_price" class="form-control mr-2" placeholder="До" style="border-radius: 0; text-align: center; width: 100px;">
+            <button type="submit" class="btn btn-primary">Применить</button>
+        </form>
+    </div>
+    {% if request.path == object.get_absolute_url %}
+        {% if grouped_products %}
+            {% for grouped_product in grouped_products %}
+                <div class="container mt-4 text-center">
+                    <h3 class="mt-4">Корпус {{ grouped_product.frame.number }}</h3>
+                </div>
+                {% for product in grouped_product.apartments %}
+                    <!-- Карточка с продуктом -->
+                    <div class="container mt-4 d-flex align-items-center justify-content-center">
+                        <a href="{{ product.get_absolute_url }}" style="text-decoration: none; color: inherit;">
+                            <div class="card" style="width: 982px; height: 128px;">
+                                <div class="row">
+                                    <!-- Первый столбец -->
+                                    <div class="col-2">
+                                        <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" class="card-img" alt="Product Image" style="width: 134px; height: 128px;">
+                                    </div>
+
+                                    <!-- Второй столбец -->
+                                    <div class="col-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ product.title }}</h5>
+                                            <p class="card-text">Стоимость от {{ product.price }} €</p>
+                                            <p class="card-text">Цена за м² от {% widthratio product.price product.area 1 %} €</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Третий столбец -->
+                                    <div class="col-6">
+                                        <div class="card-body align-items-start">
+                                            <p class="card-text mb-0">Корпус {{ product.frame.number }}, Этаж {{ product.floors }} из {{ product.frame.floors }}</p>
+                                            <p class="card-text mb-0">Заселение до {{ product.frame.object.date }}</p>
+                                            {% if product.available %}
+                                            {% else %}
+                                                <div class="alert alert-danger my-1 text-center">Забронировано</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% else %}
+            <div class="container mt-4 text-center">
+                <p class="display-4">Нет доступных квартир</p>
+                <i class="fas fa-shopping-cart fa-5x"></i>
+            </div>
+        {% endif %}
+    {% else %}
+        {% if products %}
+        {% for product in products %}
+    <!-- Карточка с продуктом -->
+    <div class="container mt-4 d-flex align-items-center justify-content-center">
+        <a href="{{ product.get_absolute_url }}" style="text-decoration: none; color: inherit;">
+            <div class="card" style="width: 982px; height: 128px;">
+                <div class="row">
+                    <!-- Первый столбец -->
+                    <div class="col-2">
+                        <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" class="card-img" alt="Product Image" style="width: 134px; height: 128px;">
+                    </div>
+
+                    <!-- Второй столбец -->
+                    <div class="col-4">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.title }}</h5>
+                            <p class="card-text">Стоимость от {{ product.price }} €</p>
+                            <p class="card-text">Цена за м² от {% widthratio product.price product.area 1 %} €</p>
+                        </div>
+                    </div>
+
+                    <!-- Третий столбец -->
+                    <div class="col-6">
+                        <div class="card-body align-items-start">
+                            <p class="card-text mb-0">Корпус {{ product.frame.number }}, Этаж {{ product.floors }} из {{ product.frame.floors }}</p>
+                            <p class="card-text mb-0">Заселение до {{ product.frame.object.date }}</p>
+                            {% if product.available %}
+                            {% else %}
+                                <div class="alert alert-danger my-1 text-center">Забронировано</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    {% endfor %}
+    {% else %}
+        <div class="container mt-4 text-center">
+            <p class="display-4">Нет доступных квартир</p>
+            <i class="fas fa-shopping-cart fa-5x"></i>
+        </div>
+    {% endif %}
+    {% endif %}
+
+
+    <style>
+        .rounded-custom {
+            border-radius: 15px; /* Задаем желаемый радиус закругления углов */
+        }
+
+        /* Добавляем стили для отступа между карточками */
+        .mb-4 {
+            margin-bottom: 1rem !important; /* Задаем отступ между карточками */
+        }
+          body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 100% высоты видимой области окна браузера */
+  }
+
+  .container-fluid {
+    flex: 1; /* Растягиваем основной контейнер на всю доступную высоту */
+  }
+
+  /* Добавленные стили для футера */
+  footer {
+    margin-top: auto; /* Магическая магия для размещения футера внизу */
+  }
+    </style>
+    <script src="{% static 'shop/js/product_list.js' %}"></script>
+{% endblock %}

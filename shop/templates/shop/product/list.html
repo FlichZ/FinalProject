@@ -1,85 +1,43 @@
 {% extends "shop/base.html" %}
 {% load static %}
 {% block title %}
-    {{title}}
+    {{ title }}
 {% endblock %}
 
 {% block content %}
     <br>
     <div class="container-fluid">
-    <h3 class="sec-popular-goods_title title-h3">
-        {% if request.resolver_match.url_name != 'product_list' %}
-            {{ title }}
-        {% else %}
-            <h1>All products</h1>
-        {% endif %}
-    </h3>
-        <div class="row">
-            <div class="col-lg-3">
-                <div class="card">
-                    <form method="post" action="">
-                        {% csrf_token %}
-                        {% if selected_tags %}
-                            <p>Выбранные теги:</p>
-                            <ul>
-                                {% for tag in selected_tags_objects %}
-                                    <a href="?{% for selected_tag in selected_tags_objects %}{% if selected_tag.id != tag.id %}tag={{ selected_tag.id }}&{% endif %}{% endfor %}" class="btn btn-light">{{ tag.name }}</a>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </form>
-                    {% if not hide_filter_panel %}
-                        <form method="get" action="{% url 'shop:product_list' %}" autocomplete="off">
-                            {% for filter_name, tags in tags_by_filter.items %}
-                                {% if tags and filter_name not in matched_filters %}
-                                    <article class="filter-group">
-                                        <header class="card-header">
-                                            <a href="#" data-toggle="collapse" data-target="#collapse_{{ forloop.counter }}" aria-expanded="true" class="">
-                                                <i class="icon-control fa fa-chevron-down"></i>
-                                                <h6 class="title">{{ filter_name }} </h6>
-                                            </a>
-                                        </header>
-                                        <div class="filter-content collapse show" id="collapse_{{ forloop.counter }}" style="">
-                                            <div class="card-body">
-                                                {% for tag in tags %}
-                                                    <label class="checkbox-btn">
-                                                        <input type="checkbox" name="tag" value="{{ tag.id }}" {% if tag.id in selected_filters|default:'' %}checked{% endif %} data-filter-name="{{ filter_name }}">
-                                                        <span class="btn btn-light"> {{ tag.name }} </span>
-                                                    </label>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    </article>
-                                {% endif %}
-                            {% endfor %}
-                        </form>
-                    {% endif %}
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for obj in objects|slice:":4" %}
+                <div class="col mb-4">
+                    <h4 class="card-title">{{ obj.title }}</h4>
+                    <div class="card border-0" style="width: 100%;">
+                        <a href="{{ obj.get_absolute_url }}">
+                            <img src="{% if obj.image %}{{ obj.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" class="card-img-top rounded-custom" alt="..." style="background-color: rgba(245, 245, 245, 1);">
+                        </a>
+                    </div>
+                    <p class="card-text" style="margin-top: 14px">от {{ obj.min_price }} €</p>
                 </div>
-            </div>
-           <div class="col-lg-6">
-                <div class="row row-cols-1 row-cols-md-3 g-4">
-                    {% for product in products %}
-                        <div class="col">
-                            <div class="card h-100">
-                                <a href="{{ product.get_absolute_url }}">
-                                    <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" class="card-img-top" alt="...">
-                                </a>
-                                <div class="card-body">
-                                    <h6 class="card-title">{{ product.title }}</h6>
-                                    <p class="card-text">€ {{ product.price }}</p>
-                                </div>
-                                {% if user.is_staff %}
-                                <div class="card-footer">
-                                    <a href="{% url 'shop:product_update' pk=product.pk %}" class="btn btn-primary">Редактировать</a>
-                                    <a href="{% url 'shop:product_delete' pk=product.pk %}" class="btn btn-danger">Удалить</a>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
+            {% endfor %}
         </div>
     </div>
-    <script src="{% static 'shop/js/product_list.js' %}"> </script>
+
+    <!-- Овальная полупрозрачная серая кнопка -->
+        <div class="container-fluid mt-4">
+            <div class="row justify-content-center">
+                <a class="btn btn-secondary btn-lg rounded-pill" style="width: 150px; height: 56px; opacity: 0.5;" href="{% url 'shop:projects' %}">Показать ещё</a>
+            </div>
+        </div>
+
+    <style>
+        .rounded-custom {
+            border-radius: 15px; /* Задаем желаемый радиус закругления углов */
+        }
+
+        /* Добавляем стили для отступа между карточками */
+        .mb-4 {
+            margin-bottom: 1rem !important; /* Задаем отступ между карточками */
+        }
+    </style>
+    <script src="{% static 'shop/js/product_list.js' %}"></script>
 {% endblock %}

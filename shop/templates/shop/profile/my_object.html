@@ -1,0 +1,90 @@
+{% extends "shop/base.html" %}
+{% load static %}
+{% block title %}
+    Бронирование
+{% endblock %}
+{% block content %}
+    <div class="container-fluid mt-4"> <!-- Добавлен отступ сверху -->
+        <div class="row">
+            <!-- Панель слева с переключателями страниц -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'shop:profile' %}">
+                                <i class="fas fa-user"></i> Профиль
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'shop:property' %}">
+                                <i class="fas fa-home"></i> Мои объекты
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'shop:booking' %}">
+                                <i class="fas fa-shopping-cart"></i> Бронирование
+                            </a>
+                        </li>
+                        <!-- Добавьте дополнительные пункты меню, если необходимо -->
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <!-- Основное содержимое страницы -->
+                <div class="container-fluid">
+                    <div class="row">
+                    {% if propertys %}
+                        {% for property in propertys %}
+                        <div class="col-6">
+                            <div class="card mb-4">
+                                <div class="row g-0">
+                                    <div class="col-md-4">
+                                        <img src="{% if property.product.image %}{{ property.product.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" class="img-fluid rounded-start" alt="Product Image">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ property.product.title }}</h5>
+                                            <p class="card-text">Стоимость от {{ property.product.price }} €</p>
+                                            <p class="card-text">Цена за м² от {% widthratio property.product.price property.product.area 1 %} €</p>
+                                            <p class="card-text">Корпус {{ property.product.frame.number }}, Этаж {{ property.product.floors }} из {{ property.product.frame.floors }}</p>
+                                            <p class="card-text">Заселение до {{ property.product.frame.object.date }}</p>
+                                            <form method="post" action="{% url 'shop:property' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_id" value="{{ property.order.id }}">
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-10 text-center">
+                            <p class="display-4">Пока нет объектов</p>
+                            <i class="fas fa-home fa-5x"></i>
+                        </div>
+                    {% endif %}
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 100% высоты видимой области окна браузера */
+  }
+
+  .container-fluid {
+    flex: 1; /* Растягиваем основной контейнер на всю доступную высоту */
+  }
+
+  /* Добавленные стили для футера */
+  footer {
+    margin-top: auto; /* Магическая магия для размещения футера внизу */
+  }
+</style>
+{% endblock %}

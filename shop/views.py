@@ -1,13 +1,17 @@
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.db.models import Min, Count, Q
 from loguru import logger
-
+from django.contrib import messages
 from django.contrib.auth import logout, login
 from django.contrib.auth.views import LoginView
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, FormView, DetailView, DeleteView, UpdateView
-from .forms import RegisterUserForm, LoginUserForm, FeedbackForm, ReviewForm, ProductForm, CategoryForm, TagForm
+
+from orders.models import OrderItem, Order
+from .forms import RegisterUserForm, LoginUserForm, FeedbackForm, ReviewForm, ProductForm, CategoryForm, TagForm, \
+    UserProfileForm, ObjectFilterForm
 from .models import *
 from .permissions import IsStaffOrReadOnly
 from .serializers import FiltersSerializer, CategorySerializer, TagSerializer, ProductSerializer, ReviewSerializer
@@ -28,97 +32,154 @@ def is_employee(user):
 
 
 class ShopHome(DataMixin, ListView):
-    model = Product
+    model = Object
     template_name = 'shop/product/list.html'
-    context_object_name = 'products'
+    context_object_name = 'objects'
+
+    def get_queryset(self):
+        # Получаем объекты, у которых есть неоплаченные квартиры
+        objects_with_apartments = Object.objects.filter(frame__product__isnull=False).distinct() \
+            .exclude(frame__product__order_items__order__paid=True)
+
+        # Вычисляем минимальную цену квартиры для каждого объекта
+        objects_with_min_price = []
+        for obj in objects_with_apartments:
+            min_price = Product.objects.filter(frame__object=obj).aggregate(Min('price'))['price__min']
+            obj.min_price = min_price
+            objects_with_min_price.append(obj)
+
+        return objects_with_min_price
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        filters = Filters.objects.all()
-        selected_tags = self.request.GET.getlist('tag')
-        if selected_tags:
-            # Получаем теги, связанные с товарами на текущей странице
-            tags_on_page = Tag.objects.filter(product__in=context['products']).distinct()
-        else:
-            tags_on_page = Tag.objects.all()
-
-        # Добавляем теги в контекст, сгруппированные по фильтру
-        tags_by_filter = {}
-        for f in filters:
-            tags_by_filter[f.name] = tags_on_page.filter(filters=f)
-
-        context['tags_by_filter'] = tags_by_filter
-
-        # Определяем уникальные фильтры и проверяем, есть ли только один товар
-        unique_filters = set()
-        for product in context['products']:
-            unique_filters.update(product.tags.values_list('filters__name', flat=True))
-
-        context['unique_filters'] = unique_filters
-        if selected_tags:
-            context['hide_filter_panel'] = len(context['products']) <= 1 or len(unique_filters) == 1
-
-        # Определяем фильтры, в которых теги полностью соответствуют тегам у всех товаров
-        matched_filters = set(tags_by_filter.keys())
-        for filter_name, tags in tags_by_filter.items():
-            for product in context['products']:
-                product_tags = set(product.tags.filter(filters__name=filter_name))
-                if product_tags != set(tags):
-                    matched_filters.discard(filter_name)
-                    break
-
-        context['matched_filters'] = matched_filters
-
-        # Если выбраны теги, фильтруем товары
-        if selected_tags:
-            # Фильтр для товаров с выбранными тегами
-            tagged_products = Product.objects.filter(tags__id__in=selected_tags).distinct()
-
-            # Фильтруем товары, чтобы оставить только те, которые содержат все выбранные теги
-            for tag_id in selected_tags:
-                tagged_products = tagged_products.filter(tags__id=tag_id)
-
-            context['products'] = tagged_products
-
-            # Скрываем панель тегов, если выбран только один товар
-            context['hide_filter_panel'] = len(tagged_products) <= 1
-
-        # Передаем выбранные теги в контекст
-        context['selected_tags'] = selected_tags
-        context['selected_tags_objects'] = Tag.objects.filter(id__in=selected_tags)
-        context['remove_tag'] = self.remove_tag
-        all_tags = Tag.objects.all()
-
-        context['all_tags'] = all_tags
+        # Добавляем минимальные цены в контекст
+        context['objects'] = context['objects']
         return context
 
-    def post(self, request, *args, **kwargs):
-        tag_id = request.POST.get('tag_id')
-        if tag_id:
-            selected_tags = request.session.get('selected_tags', [])
-            tag = Tag.objects.get(id=tag_id)  # Получаем объект тега
-            if tag_id in selected_tags:
-                selected_tags.remove(tag_id)
-                request.session['selected_tags'] = selected_tags
-        return redirect(request.path)
+
+class ObjectList(ListView):
+    model = Object
+    template_name = 'shop/product/project_list.html'
+    context_object_name = 'objects'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        selected_tags = self.request.GET.getlist('tag')
+        form = ObjectFilterForm(self.request.GET)
+        objects_with_apartments = Object.objects.filter(frame__product__isnull=False).distinct()
 
-        if selected_tags:
-            queryset = queryset.filter(tags__id__in=selected_tags)
+        if form.is_valid():
+            category = form.cleaned_data.get('category')
+            min_price = form.cleaned_data.get('min_price')
+            max_price = form.cleaned_data.get('max_price')
 
-            # Сохраняем выбранные теги в сессии
-            self.request.session['selected_tags'] = selected_tags
+            if category:
+                objects_with_apartments = objects_with_apartments.filter(frame__product__category__slug=category)
 
-        return queryset
+            objects_with_apartments = objects_with_apartments.exclude(frame__product__order_items__order__paid=True)
 
-    def remove_tag(self, tag):
-        selected_tags = self.request.session.get('selected_tags', [])
-        if tag.id in selected_tags:
-            selected_tags.remove(tag.id)
-            self.request.session['selected_tags'] = selected_tags
+            if min_price:
+                objects_with_apartments = objects_with_apartments.filter(frame__product__price__gte=min_price)
+
+            if max_price:
+                objects_with_apartments = objects_with_apartments.filter(frame__product__price__lte=max_price)
+
+        objects_with_min_price = []
+        for obj in objects_with_apartments:
+            min_price = obj.frame_set.first().product_set.filter(available=True).aggregate(min_price=Min('price'))[
+                'min_price']
+            obj.min_price = min_price
+            objects_with_min_price.append(obj)
+
+        return objects_with_min_price
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter_form'] = ObjectFilterForm(self.request.GET)
+        return context
+
+
+class SearchList(ListView):
+    model = Product
+    template_name = 'shop/product/search_list.html'
+    context_object_name = 'products'
+
+    def get_queryset(self):
+        # Извлекаем параметры из запроса
+        category = self.request.GET.get('category')
+        min_price = self.request.GET.get('min_price')
+        max_price = self.request.GET.get('max_price')
+
+        # Фильтруем продукты, исключая оплаченные и находящиеся в заказах
+        products = Product.objects.exclude(order_items__order__paid=True) \
+            .annotate(order_count=Count('order_items', filter=Q(order_items__order__paid=True))) \
+            .exclude(order_count__gt=0)
+
+        # Применяем фильтры, если они переданы в запросе
+        if category:
+            products = products.filter(category__slug=category)
+
+        if min_price:
+            products = products.filter(price__gte=min_price)
+
+        if max_price:
+            products = products.filter(price__lte=max_price)
+
+        return products
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Добавьте любую дополнительную логику контекста, если необходимо
+
+        return context
+
+
+class SearchListProject(ListView):
+    template_name = 'shop/product/search_list.html'
+    context_object_name = 'products'
+
+    def get_queryset(self):
+        object_slug = self.kwargs['object_slug']
+        current_object = get_object_or_404(Object, slug=object_slug)
+
+        # Извлекаем параметры из запроса
+        category = self.request.GET.get('category')
+        min_price = self.request.GET.get('min_price')
+        max_price = self.request.GET.get('max_price')
+
+        # Фильтруем продукты по текущему объекту и условиям
+        products = Product.objects.filter(frame__object=current_object) \
+            .exclude(order_items__order__paid=True) \
+            .annotate(order_count=Count('order_items', filter=Q(order_items__order__paid=True))) \
+            .exclude(order_count__gt=0)
+
+        # Применяем фильтры, если они переданы в запросе
+        if category:
+            products = products.filter(category__slug=category)
+
+        if min_price:
+            products = products.filter(price__gte=min_price)
+
+        if max_price:
+            products = products.filter(price__lte=max_price)
+
+        return products
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object'] = Object.objects.filter(slug=self.kwargs['object_slug']).first()
+
+        # Группировка продуктов по корпусам
+        grouped_products = {}
+        for product in context['products']:
+            frame_number = product.frame.number
+            if frame_number not in grouped_products:
+                grouped_products[frame_number] = {'frame': product.frame, 'apartments': []}
+            grouped_products[frame_number]['apartments'].append(product)
+
+        # Преобразование словаря в список для удобства отображения в шаблоне
+        context['grouped_products'] = list(grouped_products.values())
+
+        return context
 
 
 class ProductCreateView(StaffRequiredMixin, CreateView):
@@ -318,3 +379,45 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsStaffOrReadOnly]
+
+
+@login_required
+def profile(request):
+    user_profile = request.user
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=user_profile)
+        if form.is_valid():
+            form.save()
+    else:
+        form = UserProfileForm(instance=user_profile)
+
+    return render(request, 'shop/profile/profile.html', {'form': form})
+
+
+@login_required
+def my_objects(request):
+    # Получите все забронированные, но не оплаченные квартиры
+    propertys = OrderItem.objects.filter(order__user=request.user, order__paid=True)
+    return render(request, 'shop/profile/my_object.html', {'propertys': propertys})
+
+
+@login_required
+def booking(request):
+    # Получите все забронированные, но не оплаченные квартиры
+    bookings = OrderItem.objects.filter(order__user=request.user, order__paid=False)
+
+    if request.method == 'POST':
+        # Обработка оплаты
+        order_id = request.POST.get('order_id')
+        order = Order.objects.get(id=order_id)
+
+        # Ваша логика оплаты
+        order.paid = True
+        order.save()
+
+        messages.success(request, 'Заказ успешно оплачен.')
+
+        return redirect('shop:profile')  # Измените на URL, который вам нужен
+
+    return render(request, 'shop/profile/booking.html', {'bookings': bookings})

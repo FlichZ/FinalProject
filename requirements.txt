@@ -9,7 +9,6 @@ loguru==0.6.0
 Pillow==9.2.0
 sqlparse==0.4.2
 utils==1.0.1
-
 djangorestframework~=3.14.0
 pytz~=2023.3.post1
 setuptools~=69.0.2

@@ -24,7 +24,7 @@
         <nav class="navbar navbar-dark navbar-expand-md navigation-clean-search fixed-top bg-light">
             <div class="container">
                 <a class="navbar-brand text-dark" href="{% url 'shop:product_list' %}">
-                    <span style="color:#0d6efd"><b>Blast shop</b></span>
+                    <span style="color:#0d6efd"><b>FutureBuilders Enterprise</b></span>
                 </a>
                 <button class="navbar-toggler" data-toggle="collapse" data-target="#navcol-1">
                     <span class="sr-only">Toggle navigation</span>
@@ -32,39 +32,15 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navcol-1">
                     <ul class="nav navbar-nav">
-                        <li class="dropdown">
-                            <a class="dropdown-toggle nav-link dropdown-toggle text-dark" data-toggle="dropdown" aria-expanded="false" href="#">Категории </a>
-                            <div class="dropdown-menu" role="menu">
-                                {% for c in categories %}
-                                <a class="dropdown-item" role="presentation" href="{{ c.get_absolute_url }}">{{ c.name }}</a>
-                                {% endfor %}
-                            </div>
-                        </li>
+
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link active text-dark" href="{% url 'shop:feedback' %}">Обратная связь</a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link active text-dark" href="{% url 'shop:about' %}">О нас</a>
+                            <a class="nav-link active text-dark" href="{% url 'shop:projects' %}">Объекты</a>
                         </li>
                         {% if user.is_staff %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Админ
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link active text-dark" href="http://127.0.0.1:8001/admin/">
+                                Менеджер
                             </a>
-                            <div class="dropdown-menu" aria-labelledby="adminDropdown">
-                                <a href="{% url 'shop:add_product' %}" class="nav-link active text-dark">Добавить продукт</a>
-                                <a href="{% url 'shop:add_category' %}" class="nav-link active text-dark">Добавить категорию</a>
-                            </div>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                CRUD
-                            </a>
-                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <a href="{% url 'shop:add_product_view' %}" class="btn btn-primary btn-block mb-2">Добавить товар</a>
-                                <a href="{% url 'shop:tag_add' %}" class="btn btn-success btn-block mb-2">Добавить тег</a>
-                                <a href="{% url 'orders:order_list' %}" class="btn btn-info btn-block">Список заказов</a>
-                            </div>
                         </li>
                         {% endif %}
                         <li class="nav-item" role="presentation">
@@ -74,27 +50,11 @@
                     <form class="form-inline mr-auto" target="_self">
                     </form>
                     {% if request.user.is_authenticated %}
-                    <span style="color:#4169E1;">{{ user.username }} &nbsp</span>
-                    <a class="btn btn-light action-button" role="button" href="{% url 'shop:logout' %}">Выйти</a>
+                    <a href="{% url 'shop:profile' %}"><span style="color:#4169E1;">{{ user.username }} &nbsp</span></a>
                     {% else %}
                     <a class="btn btn-light action-button" role="button" href="{% url 'shop:login' %}">Войти</a>&nbsp
                     <a class="btn btn-light action-button" role="button" href="{% url 'shop:register' %}">Зарегистрироваться</a>
                     {% endif %}
-                </div>
-                <a class="ott btn btn-primary" href="{% url 'cart:cart_detail' %}" role="button">
-                    <span >Корзина</span>
-                </a>
-                <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item">
-                            <div class="dropdown-custom">
-                                <a href="{% url 'cart:cart_detail' %}" class="nav-link text-black drop-btn">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    €<span id="cart_price">{{ cart_total_price }}</span>
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
                 </div>
             </div>
         </nav>
@@ -106,7 +66,7 @@
     <header class="bg-dark py-5">
         <div class="container px-4 px-lg-5 my-5">
             <div class="text-center text-white">
-                <h1 class="display-2"><span style="color:#0d6efd"><b> BLAST </b></span> SHOP</h1>
+
 
             </div>
         </div>

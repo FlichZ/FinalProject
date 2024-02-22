@@ -39,7 +39,7 @@ class Cart:
 
         return cart_items
 
-    def add_to_cart(self, product_id: int, quantity: int, overwrite_qty: bool = False) -> None:
+    def add_to_cart(self, product_id: int, quantity: int = 1, overwrite_qty: bool = False) -> None:
         """
         Добавляет товар в корзину или обновляет его количество, если товар уже в корзине.
         """
@@ -52,7 +52,8 @@ class Cart:
         if overwrite_qty:
             self.cart[product_id]['quantity'] = quantity
         else:
-            self.cart[product_id]['quantity'] += quantity
+            # Ограничение на количество товара в корзине одним
+            self.cart[product_id]['quantity'] = min(1, quantity)
 
         self.session.modified = True
 

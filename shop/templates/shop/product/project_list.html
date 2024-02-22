@@ -1,0 +1,97 @@
+{% extends "shop/base.html" %}
+{% load static %}
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <br>
+    <!-- Овальный переключатель -->
+            <div class="container-fluid mb-4 d-flex align-items-center justify-content-center">
+                <div class="row justify-content-center">
+                    <div class="input-group input-group-lg">
+                        <div class="btn btn-secondary rounded-pill" style="opacity: 0.5; background-color: #f8f9fa; width: 296px; height: 56px; padding: 5px;">
+                            <div class="input-group-prepend d-flex align-items-center">
+                                <div class="btn-group d-flex align-items-center" data-toggle="buttons" style="margin-top: 2px">
+                                    <div class="btn btn-secondary rounded-pill active text-dark" style="opacity: 1; background-color: #e9ecef; width: 131px;" onclick="window.location='{% url 'shop:projects' %}'">
+                                        Проекты
+                                    </div>
+                                    <div class="btn btn-secondary rounded-pill text-dark" style="opacity: 0.5; background-color: #f8f9fa; width: 157px;" onclick="window.location='{% url 'shop:search' %}'">
+                                        Квартиры
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+    <!-- Дополнительные элементы в одной строке -->
+    <div class="container-fluid mt-4 d-flex align-items-center justify-content-start">
+        <a href="{% url 'shop:projects' %}?category=studio" class="btn btn-secondary rounded-pill" style="width: 120px; height: 46px; opacity: 0.7;">Студия</a>
+        <!-- Круглые кнопки "1", "2", "3+" -->
+        <div class="btn-group" style="margin-left: 20px;">
+            <a href="{% url 'shop:projects' %}?category=1-room" class="btn btn-secondary rounded-circle" style="width: 46px; height: 46px;">1</a>
+            <a href="{% url 'shop:projects' %}?category=2-room" class="btn btn-secondary rounded-circle" style="width: 46px; height: 46px;">2</a>
+            <a href="{% url 'shop:projects' %}?category=3-room" class="btn btn-secondary rounded-circle" style="width: 46px; height: 46px;">3+</a>
+        </div>
+
+        <!-- Овальная кнопка с разделением полей "От" и "До" с ползунками -->
+        <form method="get" class="form-inline" style="width: 350px; margin-left: 20px;">
+            <input type="text" name="min_price" class="form-control mr-2" placeholder="От" style="border-radius: 0; text-align: center; width: 100px;">
+            <input type="text" name="max_price" class="form-control mr-2" placeholder="До" style="border-radius: 0; text-align: center; width: 100px;">
+            <button type="submit" class="btn btn-primary">Применить</button>
+        </form>
+    </div>
+
+    <!-- Карточки с проектами и квартирами -->
+    <div class="container-fluid" style="margin-top:30px">
+        {% if objects %}
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for obj in objects %}
+                    <div class="col mb-4">
+                        <h4 class="card-title">{{ obj.title }}</h4>
+                        <div class="card border-0" style="width: 100%;">
+                            <a href="{{ obj.get_absolute_url }}">
+                                <img src="{% if obj.image %}{{ obj.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" class="card-img-top rounded-custom" alt="..." style="background-color: rgba(245, 245, 245, 1);">
+                            </a>
+                        </div>
+                        <p class="card-text" style="margin-top: 14px">от {{ obj.min_price }} €</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center">
+                <p class="display-4">По заданным параметрам не удалось ничего подобрать</p>
+                <p>Попробуйте изменить настройки фильтров</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .rounded-custom {
+            border-radius: 15px; /* Задаем желаемый радиус закругления углов */
+        }
+
+        /* Добавляем стили для отступа между карточками */
+        .mb-4 {
+            margin-bottom: 1rem !important; /* Задаем отступ между карточками */
+        }
+          body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 100% высоты видимой области окна браузера */
+  }
+
+  .container-fluid {
+    flex: 1; /* Растягиваем основной контейнер на всю доступную высоту */
+  }
+
+  /* Добавленные стили для футера */
+  footer {
+    margin-top: auto; /* Магическая магия для размещения футера внизу */
+  }
+    </style>
+    <script src="{% static 'shop/js/product_list.js' %}"></script>
+{% endblock %}

@@ -1,14 +1,13 @@
 from django.db import models
 from shop.models import Product
+from django.contrib.auth.models import User
 
 
 class Order(models.Model):
     first_name = models.CharField(max_length=60, verbose_name="Имя")
     last_name = models.CharField(max_length=60, verbose_name="Фамилия")
     email = models.EmailField(verbose_name="Email")
-    address = models.CharField(max_length=150, verbose_name="Адрес")
-    postal_code = models.CharField(max_length=30, verbose_name="Почтовый индекс")
-    city = models.CharField(max_length=100, verbose_name="Город")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
     paid = models.BooleanField(default=False, verbose_name="Оплачен ли заказ")
